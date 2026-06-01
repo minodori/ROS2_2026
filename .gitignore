@@ -1,0 +1,14 @@
+# Node (DOCX 변환기 의존성)
+node_modules/
+package-lock.json
+
+# 합본 빌드 임시 파일
+build_tmp/
+
+# OS
+.DS_Store
+
+# ROS 2 워크스페이스 산출물(독자가 빌드 시 생성)
+build/
+install/
+log/

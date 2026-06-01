@@ -1,0 +1,27 @@
+{
+  "name": "ros2_2026",
+  "version": "1.0.0",
+  "description": "> **기준 환경**: ROS 2 **Jazzy Jalisco** (LTS, ~2029) · **Ubuntu 24.04** · **Gazebo Harmonic** > 표윤석 박사의 『ROS 2로 시작하는 로봇 프로그래밍』을 이론 뼈대로 삼고, > [gcamp_ros2_basic](https://github.com/sumilee-pcu/gcamp_ros2_basic)의 Gazebo 실습과 > [turtlebot3](https://github.com/sumilee-pcu/turtlebot3) 패키지를 실습 본체로 결합한 **실습 중심 교재**입니다.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sumilee-pcu/ROS2_2026.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sumilee-pcu/ROS2_2026/issues"
+  },
+  "homepage": "https://github.com/sumilee-pcu/ROS2_2026#readme",
+  "dependencies": {
+    "docx": "^9.7.1"
+  }
+}

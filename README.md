@@ -112,6 +112,15 @@
 장별 완성 코드는 [`code/`](code/) 디렉터리에 ROS 2 패키지 단위로 정리합니다.
 (원본: [gcamp_ros2_basic](https://github.com/sumilee-pcu/gcamp_ros2_basic) → Jazzy 포팅본)
 
+## 집필 참고 통합 노트
+
+- [세 참고서 추가 반영 계획](docs/_authoring/reference_integration_plan.md) — Rico 이론 프레임,
+  중국어 ROS2 실습 흐름, Innovative 확장 주제를 현재 18장 원고에 어떻게 녹일지 정리
+- [gcamp/Renard 포팅 참고](docs/_authoring/porting_reference.md) — Foxy/Gazebo Classic 자료를
+  Jazzy/Gazebo Harmonic 기준으로 옮길 때의 대조표
+- [장별 공통 템플릿](docs/_authoring/chapter_template.md) — 장마다 동일하게 유지할 학습 흐름과
+  실행 확인 구조
+
 ## 라이선스 / 출처
 
 - 본문: 집필 중 (저자: 이수미)

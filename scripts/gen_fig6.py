@@ -188,12 +188,21 @@ rounded_box(ax, 6.5, 2.5, 3.2, 1.1, 'my_cpp_pkg', ORANGE_BG, ORANGE_EC, ORANGE_T
             fontsize=11, sublabel='<depend>my_robot_interfaces</depend>', sub_fs=7)
 
 # Arrows (depends on)
-arrow(ax, 1.9, 2.5, 4.0, 1.6, color=GREEN_EC)
-arrow(ax, 8.1, 2.5, 6.0, 1.6, color=ORANGE_EC)
+import numpy as np
+# Left arrow: my_py_pkg → my_robot_interfaces
+x1L, y1L, x2L, y2L = 1.9, 2.5, 4.0, 1.6
+arrow(ax, x1L, y1L, x2L, y2L, color=GREEN_EC)
+# Right arrow: my_cpp_pkg → my_robot_interfaces
+x1R, y1R, x2R, y2R = 8.1, 2.5, 6.0, 1.6
+arrow(ax, x1R, y1R, x2R, y2R, color=ORANGE_EC)
 
-# Label on arrows
-ax.text(2.5, 2.15, 'import', fontsize=9, color=GREEN_TC, rotation=30, ha='center')
-ax.text(7.5, 2.15, '#include', fontsize=9, color=ORANGE_TC, rotation=-30, ha='center')
+# Label on arrows — parallel to arrow direction
+angle_L = np.degrees(np.arctan2(y2L - y1L, x2L - x1L))
+angle_R = np.degrees(np.arctan2(y1R - y2R, x1R - x2R))
+ax.text((x1L+x2L)/2, (y1L+y2L)/2 + 0.12, 'import', fontsize=9, color=GREEN_TC,
+        rotation=angle_L, ha='center', va='bottom', rotation_mode='anchor')
+ax.text((x1R+x2R)/2, (y1R+y2R)/2 + 0.12, '#include', fontsize=9, color=ORANGE_TC,
+        rotation=angle_R, ha='center', va='bottom', rotation_mode='anchor')
 
 plt.savefig(f'{FIGURES}/fig6-3.png', dpi=150, bbox_inches='tight',
             facecolor='white', pad_inches=0.15)

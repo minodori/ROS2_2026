@@ -13,6 +13,8 @@
 
 - 모든 통신 예제를 **Python과 C++** 양쪽으로 제시
 - **Gazebo 시뮬레이션 3대 프로젝트**(주차 / 로봇 복제 / 미로 탈출)로 개념을 통합
+- **좌표계/TF**를 URDF·SLAM·Nav2 전반의 연결 개념으로 명시
+- **OpenCV 출구 마커 인식**을 Maze 프로젝트에 결합해 센서 융합 입문 제공
 - **TurtleBot3 실로봇·SLAM·Nav2**까지 연결
 - 원본 실습이 **Foxy(EOL)** 기반이던 것을 **Jazzy로 전면 포팅·검증**
 
@@ -60,7 +62,7 @@
 - [7장. 런치 시스템](docs/02_basics/07_launch.md) — 목표 20p
 
 ### 3부. 시뮬레이션 기초
-- [8장. Gazebo Harmonic과 URDF 기초](docs/03_simulation/08_gazebo_urdf.md) — 목표 28p
+- [8장. Gazebo Harmonic과 URDF·좌표계/TF 기초](docs/03_simulation/08_gazebo_urdf.md) — 목표 28p
 
 > **1권 소계 ≈ 176p**
 
@@ -71,7 +73,7 @@
 ### 4부. 시뮬레이션 통합 프로젝트 ★
 - [9장. 프로젝트 1 — 주차(Parking): LaserScan 구독 + Twist 발행](docs/03_simulation/09_project_parking.md) — 목표 22p
 - [10장. 프로젝트 2 — 로봇 복제(Spawn): Gazebo 서비스](docs/03_simulation/10_project_spawn.md) — 목표 18p
-- [11장. 프로젝트 3 — 미로 탈출(Maze Escape): 액션 + Odometry + OpenCV](docs/03_simulation/11_project_maze.md) — 목표 26p
+- [11장. 프로젝트 3 — 미로 탈출(Maze Escape): 액션 + Odometry + OpenCV 출구 마커](docs/03_simulation/11_project_maze.md) — 목표 26p
 
 ### 5부. 실로봇 — TurtleBot3
 - [12장. TurtleBot3 구성과 Bringup](docs/04_turtlebot3/12_bringup.md) — 목표 14p
@@ -109,6 +111,15 @@
 
 장별 완성 코드는 [`code/`](code/) 디렉터리에 ROS 2 패키지 단위로 정리합니다.
 (원본: [gcamp_ros2_basic](https://github.com/sumilee-pcu/gcamp_ros2_basic) → Jazzy 포팅본)
+
+## 집필 참고 통합 노트
+
+- [세 참고서 추가 반영 계획](docs/_authoring/reference_integration_plan.md) — Rico 이론 프레임,
+  중국어 ROS2 실습 흐름, Innovative 확장 주제를 현재 18장 원고에 어떻게 녹일지 정리
+- [gcamp/Renard 포팅 참고](docs/_authoring/porting_reference.md) — Foxy/Gazebo Classic 자료를
+  Jazzy/Gazebo Harmonic 기준으로 옮길 때의 대조표
+- [장별 공통 템플릿](docs/_authoring/chapter_template.md) — 장마다 동일하게 유지할 학습 흐름과
+  실행 확인 구조
 
 ## 라이선스 / 출처
 

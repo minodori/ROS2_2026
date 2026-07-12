@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import os
 
-plt.rcParams['font.family'] = 'NanumGothic'
+import matplotlib.font_manager as fm
+_available = {f.name for f in fm.fontManager.ttflist}
+plt.rcParams['font.family'] = 'NanumGothic' if 'NanumGothic' in _available else 'Malgun Gothic'
 
 plt.rcParams['axes.unicode_minus'] = False
 
@@ -53,30 +55,30 @@ def arrow(ax, x1, y1, x2, y2, color=GRAY, style='->', lw=1.5):
 # fig6-1: Parameter lifecycle
 # declare → get/set (runtime) → YAML file
 # ══════════════════════════════════════════
-fig, ax = plt.subplots(figsize=(11, 5))
-ax.set_xlim(0, 11)
-ax.set_ylim(0, 5)
+fig, ax = plt.subplots(figsize=(11, 5.5))
+ax.set_xlim(-0.2, 11)
+ax.set_ylim(0, 5.5)
 ax.axis('off')
 
-# Title
-ax.text(5.5, 4.65, '파라미터 생명주기', ha='center', va='center',
+# Title — well above the dashed box
+ax.text(5.5, 5.2, '파라미터 생명주기', ha='center', va='center',
         fontsize=14, fontweight='bold', color=DARK)
 
 # Step 1: declare
 rounded_box(ax, 0.3, 2.8, 2.4, 1.2, 'declare_parameter', BLUE_BG, BLUE_EC, BLUE_TC,
-            fontsize=10, sublabel='선언 + 기본값')
+            fontsize=12, sublabel='선언 + 기본값', sub_fs=10)
 
 # Step 2: get (code)
 rounded_box(ax, 3.5, 3.2, 2.2, 0.8, 'get_parameter', GREEN_BG, GREEN_EC, GREEN_TC,
-            fontsize=10)
+            fontsize=12)
 
 # Step 3: set (runtime)
 rounded_box(ax, 3.5, 2.0, 2.2, 0.8, 'ros2 param set', ORANGE_BG, ORANGE_EC, ORANGE_TC,
-            fontsize=10)
+            fontsize=12)
 
 # Step 4: YAML
 rounded_box(ax, 6.6, 2.8, 2.2, 1.2, 'params.yaml', PURPLE_BG, PURPLE_EC, PURPLE_TC,
-            fontsize=11, sublabel='--params-file')
+            fontsize=12, sublabel='--params-file', sub_fs=10)
 
 # Arrows
 arrow(ax, 2.7, 3.4, 3.5, 3.55)
@@ -85,7 +87,7 @@ arrow(ax, 5.7, 3.4, 6.6, 3.4)
 
 # CLI injection box at top
 rounded_box(ax, 3.2, 0.5, 5.8, 0.9, '--ros-args  -p name:=value', '#FEF5E4', '#D35400', '#6E2F00',
-            fontsize=10, sublabel='CLI 주입')
+            fontsize=11, sublabel='CLI 주입', sub_fs=10)
 arrow(ax, 5.0, 1.4, 4.6, 2.0)
 
 # Node box encompassing
@@ -93,7 +95,7 @@ node_rect = patches.FancyBboxPatch((0.1, 1.7), 5.8, 2.7, boxstyle='round,pad=0.1
                                     linewidth=2, edgecolor=DARK, facecolor='none',
                                     linestyle='--')
 ax.add_patch(node_rect)
-ax.text(0.3, 4.2, 'Node', fontsize=11, fontweight='bold', color=DARK)
+ax.text(0.3, 4.2, 'Node', fontsize=12, fontweight='bold', color=DARK)
 
 plt.savefig(f'{FIGURES}/fig6-1.png', dpi=150, bbox_inches='tight',
             facecolor='white', pad_inches=0.15)

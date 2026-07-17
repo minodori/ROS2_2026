@@ -26,6 +26,8 @@ TEXT_W = 36000  # B5 본문 폭 (HWPUNIT)
 # 기본값: _wbtmpl/book 템플릿 기준. 다른 템플릿이면 --charmap 으로 교체
 # (hwpx_outline.py --analyze 로 id 확인. 예: 최종본책은 h1:70,h2:19,h3:7,bold:7,body:11,quote:9)
 C_TITLE, C_H2, C_H3, C_BOLD, C_BODY, C_QUOTE = 33, 23, 50, 7, 12, 9
+C_CODE = C_BODY   # 코드블록 글자 모양 (--charmap code:N 으로 교체)
+CODE_BF = 4       # 코드블록 테두리 채움 (--charmap codefill:N 으로 교체)
 HEIGHT = {C_TITLE: 1500, C_H2: 1100, C_H3: 1100, C_BOLD: 1000, C_BODY: 1000, C_QUOTE: 900}
 
 _tbl_id = [1107880100]
@@ -80,10 +82,19 @@ def empty_para():
     return para("", C_BODY)
 
 
+def _cell_lines(text, w):
+    """텍스트가 셀 폭 w(HWPUNIT)에서 몇 줄로 나뉘는지 추정 (최소 1)."""
+    vis = _vis_len(text)
+    chars_per_line = max(1, w / 560)  # 한글 1자≈560 HWPUNIT
+    return max(1, int(vis / chars_per_line) + 1)
+
+
 def cell(text, char, col, row, w, header=False):
     runs = inline_runs(text, char)
     r = "".join(f'<hp:run charPrIDRef="{c}"><hp:t>{esc(t)}</hp:t></hp:run>' for c, t in runs)
     h = HEIGHT.get(char, 1000)
+    nlines = _cell_lines(text, w)
+    cell_h = max(1600, nlines * (h + 200) + 280)
     p = (f'<hp:p id="0" paraPrIDRef="22" styleIDRef="0" pageBreak="0" columnBreak="0" '
          f'merged="0">{r}{lineseg(h, w)}</hp:p>')
     hd = "1" if header else "0"
@@ -93,7 +104,7 @@ def cell(text, char, col, row, w, header=False):
             f'textWidth="0" textHeight="0" hasTextRef="0" hasNumRef="0">{p}</hp:subList>'
             f'<hp:cellAddr colAddr="{col}" rowAddr="{row}"/>'
             f'<hp:cellSpan colSpan="1" rowSpan="1"/>'
-            f'<hp:cellSz width="{w}" height="1600"/>'
+            f'<hp:cellSz width="{w}" height="{cell_h}"/>'
             f'<hp:cellMargin left="510" right="510" top="141" bottom="141"/></hp:tc>')
 
 
@@ -153,11 +164,11 @@ def code_box(lines):
     ps = ""
     for ln in (lines or [""]):
         ps += (f'<hp:p id="0" paraPrIDRef="22" styleIDRef="0" pageBreak="0" '
-               f'columnBreak="0" merged="0"><hp:run charPrIDRef="{C_BODY}">'
+               f'columnBreak="0" merged="0"><hp:run charPrIDRef="{C_CODE}">'
                f'<hp:t>{esc(ln)}</hp:t></hp:run>{lineseg(950, w)}</hp:p>')
     hgt = max(1600, len(lines) * 520)
     c = (f'<hp:tc name="" header="0" hasMargin="0" protect="0" editable="0" dirty="0" '
-         f'borderFillIDRef="4"><hp:subList id="" textDirection="HORIZONTAL" lineWrap="BREAK" '
+         f'borderFillIDRef="{CODE_BF}"><hp:subList id="" textDirection="HORIZONTAL" lineWrap="BREAK" '
          f'vertAlign="TOP" linkListIDRef="0" linkListNextIDRef="0" textWidth="0" '
          f'textHeight="0" hasTextRef="0" hasNumRef="0">{ps}</hp:subList>'
          f'<hp:cellAddr colAddr="0" rowAddr="0"/><hp:cellSpan colSpan="1" rowSpan="1"/>'
@@ -166,7 +177,7 @@ def code_box(lines):
     tbl = (f'<hp:tbl id="{tid}" zOrder="{tid}" numberingType="TABLE" '
            f'textWrap="TOP_AND_BOTTOM" textFlow="BOTH_SIDES" lock="0" dropcapstyle="None" '
            f'pageBreak="CELL" repeatHeader="0" rowCnt="1" colCnt="1" cellSpacing="0" '
-           f'borderFillIDRef="4" noAdjust="0">'
+           f'borderFillIDRef="{CODE_BF}" noAdjust="0">'
            f'<hp:sz width="{w}" widthRelTo="ABSOLUTE" height="{hgt}" '
            f'heightRelTo="ABSOLUTE" protect="0"/>'
            f'<hp:pos treatAsChar="1" affectLSpacing="0" flowWithText="1" allowOverlap="0" '
@@ -218,6 +229,11 @@ def convert_md(md):
             out.append(para(s[5:].strip(), C_BOLD))
         elif s == "---":
             out.append(empty_para())
+        elif re.match(r'^!\[', s):
+            # 이미지: alt text를 캡션 문단으로 출력 (hwpx_insert_figs.py로 실제 이미지 삽입)
+            alt = re.sub(r'^!\[([^\]]*)\]\([^)]*\)$', r'\1', s).strip()
+            if alt:
+                out.append(para(alt, C_QUOTE))
         elif s.startswith(">"):
             out.append(para(s.lstrip(">").strip(), C_QUOTE))
         elif re.match(r'^- \[[ xX]\] ', s):
@@ -265,7 +281,7 @@ def main():
         if not args.charmap:
             args.charmap = _ASSET_CHARMAP  # 동봉 템플릿에서 검증된 매핑
 
-    global C_TITLE, C_H2, C_H3, C_BOLD, C_BODY, C_QUOTE, HEIGHT, EMIT_LINESEG, TEXT_W
+    global C_TITLE, C_H2, C_H3, C_BOLD, C_BODY, C_QUOTE, C_CODE, CODE_BF, HEIGHT, EMIT_LINESEG, TEXT_W
     EMIT_LINESEG = args.legacy_lineseg
     if args.textwidth:
         TEXT_W = args.textwidth
@@ -277,6 +293,8 @@ def main():
         C_BOLD = int(m.get("bold", C_BOLD))
         C_BODY = int(m.get("body", C_BODY))
         C_QUOTE = int(m.get("quote", C_QUOTE))
+        C_CODE = int(m.get("code", C_CODE))
+        CODE_BF = int(m.get("codefill", CODE_BF))
 
     # 템플릿 준비 (.hwpx 면 임시 폴더에 풀기)
     tmpdir = None

@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 TEMPLATE = ROOT / "typeset/template/ROS2첫걸음1_B5_이수미_1장_최종.hwpx"
-CHARMAP = "h1:22,h2:15,h3:7,bold:13,body:11,quote:9"
+CHARMAP = "h1:22,h2:15,h3:7,bold:13,body:11,quote:9,code:39,codefill:6"
 
 CONVERT = ROOT / "typeset/scripts/md2hwpx.py"
 CODE_BOXES = ROOT / "typeset/scripts/hwpx_code_boxes.py"

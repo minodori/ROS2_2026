@@ -217,13 +217,13 @@ source ~/ros2_ws/install/setup.bash
 ros2 run my_cpp_pkg configurable_publisher --ros-args -p publish_period:=0.3
 ```
 
-> **Python vs C++ 파라미터 API 비교**
->
-> | 작업 | Python | C++ |
-> |---|---|---|
-> | 선언 | self.declare_parameter("name", default) | this->declare_parameter("name", default) |
-> | 읽기 | self.get_parameter("name").value | this->get_parameter("name").as_double() |
-> | 타입 | .value 가 자동 추론 | .as_double(), .as_string() 등 명시 |
+**Python vs C++ 파라미터 API 비교**
+
+| 작업 | Python | C++ |
+|---|---|---|
+| 선언 | self.declare_parameter("name", default) | this->declare_parameter("name", default) |
+| 읽기 | self.get_parameter("name").value | this->get_parameter("name").as_double() |
+| 타입 | .value 가 자동 추론 | .as_double(), .as_string() 등 명시 |
 
 ---
 

@@ -28,6 +28,7 @@ TEXT_W = 36000  # B5 본문 폭 (HWPUNIT)
 C_TITLE, C_H2, C_H3, C_BOLD, C_BODY, C_QUOTE = 33, 23, 50, 7, 12, 9
 C_CODE = C_BODY   # 코드블록 글자 모양 (--charmap code:N 으로 교체)
 CODE_BF = 4       # 코드블록 테두리 채움 (--charmap codefill:N 으로 교체)
+C_OPENER_ITEM = C_QUOTE   # "이 장에서 다루는 내용" 항목 (--charmap opener_item:N)
 HEIGHT = {C_TITLE: 1500, C_H2: 1100, C_H3: 1100, C_BOLD: 1000, C_BODY: 1000, C_QUOTE: 900}
 
 _tbl_id = [1107880100]
@@ -95,7 +96,8 @@ def cell(text, char, col, row, w, header=False):
     h = HEIGHT.get(char, 1000)
     nlines = _cell_lines(text, w)
     cell_h = max(1600, nlines * (h + 200) + 280)
-    p = (f'<hp:p id="0" paraPrIDRef="22" styleIDRef="0" pageBreak="0" columnBreak="0" '
+    para_pr = "26" if header else "15"  # CENTER(헤더)/LEFT(본문) - 양쪽정렬·큰들여쓰기 paraPr22 불가
+    p = (f'<hp:p id="0" paraPrIDRef="{para_pr}" styleIDRef="0" pageBreak="0" columnBreak="0" '
          f'merged="0">{r}{lineseg(h, w)}</hp:p>')
     hd = "1" if header else "0"
     return (f'<hp:tc name="" header="{hd}" hasMargin="0" protect="0" editable="0" '
@@ -163,7 +165,7 @@ def code_box(lines):
     w = TEXT_W
     ps = ""
     for ln in (lines or [""]):
-        ps += (f'<hp:p id="0" paraPrIDRef="22" styleIDRef="0" pageBreak="0" '
+        ps += (f'<hp:p id="0" paraPrIDRef="15" styleIDRef="0" pageBreak="0" '
                f'columnBreak="0" merged="0"><hp:run charPrIDRef="{C_CODE}">'
                f'<hp:t>{esc(ln)}</hp:t></hp:run>{lineseg(950, w)}</hp:p>')
     hgt = max(1600, len(lines) * 520)
@@ -191,12 +193,47 @@ def code_box(lines):
             f'{lineseg(1000)}</hp:p>')
 
 
+_BLOCK_RE = re.compile(
+    r'^#{1,6}\s|^```|^>\s?|^- |^- \[[ xX]\]|\|.*\||^---$|^!\['
+)
+_CAPTION_RE = re.compile(r'^그림\s+\d+-\d+[.\s]')
+
+
+def _is_block_line(s):
+    """연속 body 행 병합 시 중단해야 하는 줄이면 True."""
+    if not s:
+        return True
+    if re.match(r'^\d+\.\s', s):
+        return True
+    if s.startswith("::::"):
+        return True
+    if _CAPTION_RE.match(s):
+        return True
+    return bool(_BLOCK_RE.match(s))
+
+
 def convert_md(md):
     out = []
     lines = md.split("\n")
     i = 0
     while i < len(lines):
         s = lines[i].strip()
+
+        # :::opener ... ::: 블록 — "이 장에서 다루는 내용" 박스
+        if s == ":::opener":
+            out.append(para("이 장에서 다루는 내용", C_H3))
+            i += 1
+            while i < len(lines) and lines[i].strip() not in (":::", ""):
+                item = lines[i].strip()
+                if item:
+                    text = item.lstrip("•").strip()
+                    if text:
+                        out.append(para("• " + text, C_OPENER_ITEM))
+                i += 1
+            i += 1  # ::: 소비
+            continue
+
+        # 코드 블록
         if s.startswith("```"):
             block = []
             i += 1
@@ -205,7 +242,10 @@ def convert_md(md):
                 i += 1
             i += 1
             out.append(code_box(block))
+            out.append(empty_para())
             continue
+
+        # 표
         if s.startswith("|") and "|" in s[1:]:
             tbl_lines = []
             while i < len(lines) and lines[i].strip().startswith("|"):
@@ -215,7 +255,9 @@ def convert_md(md):
                     for tl in tbl_lines if not re.match(r'^\|[\s:|-]+\|?$', tl)]
             if rows:
                 out.append(table(rows, has_header=True))
+                out.append(empty_para())
             continue
+
         if s.startswith("# "):
             out.append(empty_para())
             out.append(para(s[2:].strip(), C_TITLE))
@@ -230,12 +272,10 @@ def convert_md(md):
         elif s == "---":
             out.append(empty_para())
         elif re.match(r'^!\[', s):
-            # 이미지: alt text를 캡션 문단으로 출력 (hwpx_insert_figs.py로 실제 이미지 삽입)
             alt = re.sub(r'^!\[([^\]]*)\]\([^)]*\)$', r'\1', s).strip()
             if alt:
                 out.append(para(alt, C_QUOTE))
-        elif re.match(r'^그림\s+\d+-\d+[.\s]', s):
-            # "그림 N-N. ..." 캡션 행 → C_QUOTE 스타일
+        elif _CAPTION_RE.match(s):
             out.append(para(s, C_QUOTE))
         elif s.startswith(">"):
             out.append(para(s.lstrip(">").strip(), C_QUOTE))
@@ -247,9 +287,17 @@ def convert_md(md):
         elif re.match(r'^\d+\.\s', s):
             out.append(para(s, C_BODY))
         elif s == "":
-            pass  # 빈 줄은 건너뜀(문단 간격은 스타일로)
+            pass
         else:
-            out.append(para(s, C_BODY))
+            # 일반 body — 연속 행을 한 문단으로 병합 (마크다운 소프트 줄바꿈)
+            parts = [s]
+            while i + 1 < len(lines):
+                ns = lines[i + 1].strip()
+                if _is_block_line(ns):
+                    break
+                parts.append(ns)
+                i += 1
+            out.append(para(" ".join(p for p in parts if p), C_BODY))
         i += 1
     return "".join(out)
 
@@ -284,7 +332,7 @@ def main():
         if not args.charmap:
             args.charmap = _ASSET_CHARMAP  # 동봉 템플릿에서 검증된 매핑
 
-    global C_TITLE, C_H2, C_H3, C_BOLD, C_BODY, C_QUOTE, C_CODE, CODE_BF, HEIGHT, EMIT_LINESEG, TEXT_W
+    global C_TITLE, C_H2, C_H3, C_BOLD, C_BODY, C_QUOTE, C_CODE, CODE_BF, C_OPENER_ITEM, HEIGHT, EMIT_LINESEG, TEXT_W
     EMIT_LINESEG = args.legacy_lineseg
     if args.textwidth:
         TEXT_W = args.textwidth
@@ -298,6 +346,7 @@ def main():
         C_QUOTE = int(m.get("quote", C_QUOTE))
         C_CODE = int(m.get("code", C_CODE))
         CODE_BF = int(m.get("codefill", CODE_BF))
+        C_OPENER_ITEM = int(m.get("opener_item", C_OPENER_ITEM))
 
     # 템플릿 준비 (.hwpx 면 임시 폴더에 풀기)
     tmpdir = None

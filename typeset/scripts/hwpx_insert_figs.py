@@ -96,6 +96,7 @@ def main():
     ap.add_argument("--charpr", default=None, help="charPrIDRef 강제 지정(기본: 앵커 상속)")
     ap.add_argument("--no-backup", action="store_true")
     ap.add_argument("--dry-run", action="store_true", help="앵커 탐색만 하고 저장 안 함")
+    ap.add_argument("--before", action="store_true", help="이미지를 앵커 문단 앞에 삽입(기본: 뒤)")
     a = ap.parse_args()
 
     F = a.hwpx
@@ -136,8 +137,13 @@ def main():
         parapr, charpr = inherit_ids(sx, apos, a.parapr, a.charpr)
         imgid = f"image{nxt}"; pid = 2200000000 + nxt * 97; iid = 1100000000 + nxt * 131; nxt += 1
         pw, ph = Image.open(fp).size
-        close = sx.find("</hp:p>", apos) + len("</hp:p>")
-        sec[n] = sx[:close] + pic_para(imgid, pid, iid, pw, ph, WD, BODYW, parapr, charpr) + sx[close:]
+        if a.before:
+            pstart = sx.rfind("<hp:p ", 0, apos)
+            ins = pstart if pstart != -1 else apos
+            sec[n] = sx[:ins] + pic_para(imgid, pid, iid, pw, ph, WD, BODYW, parapr, charpr) + sx[ins:]
+        else:
+            close = sx.find("</hp:p>", apos) + len("</hp:p>")
+            sec[n] = sx[:close] + pic_para(imgid, pid, iid, pw, ph, WD, BODYW, parapr, charpr) + sx[close:]
         new_items.append(f'<opf:item id="{imgid}" href="BinData/{imgid}.png" media-type="image/png" isEmbeded="1"/>')
         new_bins[f"BinData/{imgid}.png"] = open(fp, "rb").read()
         print(f"  {imgid:8s} <= {png:32s} ({pw}x{ph}) -> {n}  [paraPr {parapr}]")

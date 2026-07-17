@@ -234,6 +234,9 @@ def convert_md(md):
             alt = re.sub(r'^!\[([^\]]*)\]\([^)]*\)$', r'\1', s).strip()
             if alt:
                 out.append(para(alt, C_QUOTE))
+        elif re.match(r'^그림\s+\d+-\d+[.\s]', s):
+            # "그림 N-N. ..." 캡션 행 → C_QUOTE 스타일
+            out.append(para(s, C_QUOTE))
         elif s.startswith(">"):
             out.append(para(s.lstrip(">").strip(), C_QUOTE))
         elif re.match(r'^- \[[ xX]\] ', s):
